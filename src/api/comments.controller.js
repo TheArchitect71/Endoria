@@ -1,6 +1,6 @@
 import UsersDAO from "../dao/usersDAO"
 import CommentsDAO from "../dao/commentsDAO"
-import MoviesDAO from "../dao/moviesDAO"
+import MoviesDAO from "../dao/questionsDAO"
 import { User } from "./users.controller"
 import { ObjectId } from "bson"
 

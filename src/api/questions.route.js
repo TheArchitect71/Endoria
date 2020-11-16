@@ -9,7 +9,7 @@ router.route("/").get(QuestionsCtrl.apiGetQuestions)
 router.route("/search").get(QuestionsCtrl.apiSearchQuestions)
 router.route("/countries").get(QuestionsCtrl.apiGetQuestionsByCountry)
 router.route("/facet-search").get(QuestionsCtrl.apiFacetedSearch)
-router.route("/id/:id").get(QuestionsCtrl.apiGetMovieById)
+router.route("/id/:id").get(QuestionsCtrl.apiGetQuestionById)
 router.route("/config-options").get(QuestionsCtrl.getConfig)
 
 router

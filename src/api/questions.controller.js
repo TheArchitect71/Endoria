@@ -2,7 +2,7 @@ import QuestionsDAO from "../dao/questionsDAO"
 
 export default class QuestionsController {
   static async apiGetQuestions(req, res, next) {
-    const MOVIES_PER_PAGE = 20
+    const QUESTIONS_PER_PAGE = 20
     const {
       questionsList,
       totalNumQuestions,
@@ -11,7 +11,7 @@ export default class QuestionsController {
       questions: questionsList,
       page: 0,
       filters: {},
-      entries_per_page: MOVIES_PER_PAGE,
+      entries_per_page: QUESTIONS_PER_PAGE,
       total_results: totalNumQuestions,
     }
     res.json(response)
@@ -28,10 +28,10 @@ export default class QuestionsController {
     res.json(response)
   }
 
-  static async apiGetMovieById(req, res, next) {
+  static async apiGetQuestionById(req, res, next) {
     try {
       let id = req.params.id || {}
-      let movie = await QuestionsDAO.getMovieByID(id)
+      let movie = await QuestionsDAO.getQuestionByID(id)
       if (!movie) {
         res.status(404).json({ error: "Not found" })
         return
@@ -45,7 +45,7 @@ export default class QuestionsController {
   }
 
   static async apiSearchQuestions(req, res, next) {
-    const MOVIES_PER_PAGE = 20
+    const QUESTIONS_PER_PAGE = 20
     let page
     try {
       page = req.query.page ? parseInt(req.query.page, 10) : 0
@@ -82,14 +82,14 @@ export default class QuestionsController {
     } = await QuestionsDAO.getQuestions({
       filters,
       page,
-      MOVIES_PER_PAGE,
+      QUESTIONS_PER_PAGE,
     })
 
     let response = {
       questions: questionsList,
       page: page,
       filters,
-      entries_per_page: MOVIES_PER_PAGE,
+      entries_per_page: QUESTIONS_PER_PAGE,
       total_results: totalNumQuestions,
     }
 
@@ -97,7 +97,7 @@ export default class QuestionsController {
   }
 
   static async apiFacetedSearch(req, res, next) {
-    const MOVIES_PER_PAGE = 20
+    const QUESTIONS_PER_PAGE = 20
 
     let page
     try {
@@ -116,7 +116,7 @@ export default class QuestionsController {
     const facetedSearchResult = await QuestionsDAO.facetedSearch({
       filters,
       page,
-      MOVIES_PER_PAGE,
+      QUESTIONS_PER_PAGE,
     })
 
     let response = {
@@ -127,7 +127,7 @@ export default class QuestionsController {
       },
       page: page,
       filters,
-      entries_per_page: MOVIES_PER_PAGE,
+      entries_per_page: QUESTIONS_PER_PAGE,
       total_results: facetedSearchResult.count,
     }
 
