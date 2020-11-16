@@ -4,7 +4,7 @@ let questions
 let mflix
 const DEFAULT_SORT = [["tomatoes.viewer.numReviews", -1]]
 
-export default class MoviesDAO {
+export default class QuestionsDAO {
   static async injectDB(conn) {
     if (questions) {
       return
@@ -43,12 +43,12 @@ export default class MoviesDAO {
    * @param {string[]} countries - The list of countries.
    * @returns {Promise<CountryResult>} A promise that will resolve to a list of CountryResults.
    */
-  static async getMoviesByCountry(countries) {
+  static async getQuestionsByCountry(countries) {
     /**
     Ticket: Projection
 
     Write a query that matches questions with the countries in the "countries"
-    list, but only returns the title and _id of each movie.
+    list, but only returns the title and _id of each question.
 
     Remember that in MongoDB, the $in operator can be used with a list to
     match one or more values of a specific field.
@@ -216,11 +216,11 @@ export default class MoviesDAO {
    * @param {Object} filters - The search parameters to use in the query.
    * @param {number} page - The page of questions to retrieve.
    * @param {number} questionsPerPage - The number of questions to display per page.
-   * @returns {GetMoviesResult} An object with movie results and total results
+   * @returns {GetQuestionsResult} An object with question results and total results
    * that would match this query
    */
-  static async getMovies({
-    // here's where the default parameters are set for the getMovies method
+  static async getQuestions({
+    // here's where the default parameters are set for the getQuestions method
     filters = null,
     page = 0,
     questionsPerPage = 20,
@@ -245,7 +245,7 @@ export default class MoviesDAO {
         .sort(sort)
     } catch (e) {
       console.error(`Unable to issue find command, ${e}`)
-      return { questionsList: [], totalNumMovies: 0 }
+      return { questionsList: [], totalNumQuestions: 0 }
     }
 
     /**
@@ -259,34 +259,36 @@ export default class MoviesDAO {
 
     // TODO Ticket: Paging
     // Use the cursor to only return the questions that belong on the current page
-    const displayCursor = cursor.limit(questionsPerPage)
+    const displayCursor = cursor
+      .skip(questionsPerPage * page)
+      .limit(questionsPerPage)
 
     try {
       const questionsList = await displayCursor.toArray()
-      const totalNumMovies =
+      const totalNumQuestions =
         page === 0 ? await questions.countDocuments(query) : 0
 
-      return { questionsList, totalNumMovies }
+      return { questionsList, totalNumQuestions }
     } catch (e) {
       console.error(
         `Unable to convert cursor to array or problem counting documents, ${e}`,
       )
-      return { questionsList: [], totalNumMovies: 0 }
+      return { questionsList: [], totalNumQuestions: 0 }
     }
   }
 
   /**
-   * Gets a movie by its id
-   * @param {string} id - The desired movie id, the _id in Mongo
-   * @returns {MflixMovie | null} Returns either a single movie or nothing
+   * Gets a question by its id
+   * @param {string} id - The desired question id, the _id in Mongo
+   * @returns {MflixQuestion | null} Returns either a single question or nothing
    */
-  static async getMovieByID(id) {
+  static async getQuestionByID(id) {
     try {
       /**
       Ticket: Get Comments
 
-      Given a movie ID, build an Aggregation Pipeline to retrieve the comments
-      matching that movie's ID.
+      Given a question ID, build an Aggregation Pipeline to retrieve the comments
+      matching that question's ID.
 
       The $match stage is already completed. You will need to add a $lookup
       stage that searches the `comments` collection for the correct comments.
@@ -312,7 +314,7 @@ export default class MoviesDAO {
 
       // TODO Ticket: Error Handling
       // Catch the InvalidId error by string matching, and then handle it.
-      console.error(`Something went wrong in getMovieByID: ${e}`)
+      console.error(`Something went wrong in getQuestionByID: ${e}`)
       throw e
     }
   }
@@ -329,13 +331,13 @@ export default class MoviesDAO {
 /**
  * Represents a single country result
  * @typedef CountryResult
- * @property {string} ObjectID - The ObjectID of the movie
- * @property {string} title - The title of the movie
+ * @property {string} ObjectID - The ObjectID of the question
+ * @property {string} title - The title of the question
  */
 
 /**
- * A Movie from mflix
- * @typedef MflixMovie
+ * A Question from mflix
+ * @typedef MflixQuestion
  * @property {string} _id
  * @property {string} title
  * @property {number} year
@@ -367,9 +369,9 @@ export default class MoviesDAO {
  */
 
 /**
- * Result set for getMovies method
- * @typedef GetMoviesResult
- * @property {MflixMovies[]} questionsList
+ * Result set for getQuestions method
+ * @typedef GetQuestionsResult
+ * @property {MflixQuestions[]} questionsList
  * @property {number} totalNumResults
  */
 
@@ -381,5 +383,5 @@ export default class MoviesDAO {
  * @typedef FacetedSearchReturn
  * @property {object} rating
  * @property {object} runtime
- * @property {MFlixMovie[]}questions
+ * @property {MFlixQuestion[]}questions
  */
