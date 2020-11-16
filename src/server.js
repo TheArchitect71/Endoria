@@ -2,7 +2,7 @@ import express from "express"
 import bodyParser from "body-parser"
 import cors from "cors"
 import morgan from "morgan"
-import movies from "../src/api/movies.route"
+import questions from "../src/api/questions.route"
 import users from "../src/api/users.route"
 
 const app = express()
@@ -13,7 +13,7 @@ app.use(bodyParser.json())
 app.use(bodyParser.urlencoded({ extended: true }))
 
 // Register api routes
-app.use("/api/v1/movies", movies)
+app.use("/api/v1/questions", questions)
 app.use("/api/v1/user", users)
 app.use("/status", express.static("build"))
 app.use("/", express.static("build"))

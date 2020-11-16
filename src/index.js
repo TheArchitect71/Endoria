@@ -1,6 +1,6 @@
 import app from "./server"
 import { MongoClient } from "mongodb"
-import MoviesDAO from "../src/dao/moviesDAO"
+import QuestionsDAO from "../src/dao/questionsDAO"
 import UsersDAO from "./dao/usersDAO"
 import CommentsDAO from "./dao/commentsDAO"
 
@@ -33,7 +33,7 @@ MongoClient.connect(
     process.exit(1)
   })
   .then(async client => {
-    await MoviesDAO.injectDB(client)
+    await QuestionsDAO.injectDB(client)
     await UsersDAO.injectDB(client)
     await CommentsDAO.injectDB(client)
     app.listen(port, () => {

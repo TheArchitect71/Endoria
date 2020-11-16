@@ -1,26 +1,29 @@
-import MoviesDAO from "../dao/moviesDAO"
+import QuestionsDAO from "../dao/questionsDAO"
 
-export default class MoviesController {
-  static async apiGetMovies(req, res, next) {
+export default class QuestionsController {
+  static async apiGetQuestions(req, res, next) {
     const MOVIES_PER_PAGE = 20
-    const { moviesList, totalNumMovies } = await MoviesDAO.getMovies()
+    const {
+      questionsList,
+      totalNumQuestions,
+    } = await QuestionsDAO.getQuestions()
     let response = {
-      movies: moviesList,
+      questions: questionsList,
       page: 0,
       filters: {},
       entries_per_page: MOVIES_PER_PAGE,
-      total_results: totalNumMovies,
+      total_results: totalNumQuestions,
     }
     res.json(response)
   }
 
-  static async apiGetMoviesByCountry(req, res, next) {
+  static async apiGetQuestionsByCountry(req, res, next) {
     let countries = Array.isArray(req.query.countries)
       ? req.query.countries
       : Array(req.query.countries)
-    let moviesList = await MoviesDAO.getMoviesByCountry(countries)
+    let questionsList = await QuestionsDAO.getQuestionsByCountry(countries)
     let response = {
-      titles: moviesList,
+      titles: questionsList,
     }
     res.json(response)
   }
@@ -28,7 +31,7 @@ export default class MoviesController {
   static async apiGetMovieById(req, res, next) {
     try {
       let id = req.params.id || {}
-      let movie = await MoviesDAO.getMovieByID(id)
+      let movie = await QuestionsDAO.getMovieByID(id)
       if (!movie) {
         res.status(404).json({ error: "Not found" })
         return
@@ -41,7 +44,7 @@ export default class MoviesController {
     }
   }
 
-  static async apiSearchMovies(req, res, next) {
+  static async apiSearchQuestions(req, res, next) {
     const MOVIES_PER_PAGE = 20
     let page
     try {
@@ -73,18 +76,21 @@ export default class MoviesController {
       // nothing to do
     }
 
-    const { moviesList, totalNumMovies } = await MoviesDAO.getMovies({
+    const {
+      questionsList,
+      totalNumQuestions,
+    } = await QuestionsDAO.getQuestions({
       filters,
       page,
       MOVIES_PER_PAGE,
     })
 
     let response = {
-      movies: moviesList,
+      questions: questionsList,
       page: page,
       filters,
       entries_per_page: MOVIES_PER_PAGE,
-      total_results: totalNumMovies,
+      total_results: totalNumQuestions,
     }
 
     res.json(response)
@@ -102,19 +108,19 @@ export default class MoviesController {
     }
 
     if (!req.query.cast) {
-      return this.apiSearchMovies(req, res, next)
+      return this.apiSearchQuestions(req, res, next)
     }
 
     const filters = { cast: req.query.cast }
 
-    const facetedSearchResult = await MoviesDAO.facetedSearch({
+    const facetedSearchResult = await QuestionsDAO.facetedSearch({
       filters,
       page,
       MOVIES_PER_PAGE,
     })
 
     let response = {
-      movies: facetedSearchResult.movies,
+      questions: facetedSearchResult.questions,
       facets: {
         runtime: facetedSearchResult.runtime,
         rating: facetedSearchResult.rating,
@@ -129,7 +135,11 @@ export default class MoviesController {
   }
 
   static async getConfig(req, res, next) {
-    const { poolSize, wtimeout, authInfo } = await MoviesDAO.getConfiguration()
+    const {
+      poolSize,
+      wtimeout,
+      authInfo,
+    } = await QuestionsDAO.getConfiguration()
     try {
       let response = {
         pool_size: poolSize,
