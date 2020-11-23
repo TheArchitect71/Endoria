@@ -2,7 +2,7 @@ import app from "./server"
 import { MongoClient } from "mongodb"
 import QuestionsDAO from "../src/dao/questionsDAO"
 import UsersDAO from "./dao/usersDAO"
-import CommentsDAO from "./dao/commentsDAO"
+import AnswersDAO from "./dao/answersDAO"
 
 const port = process.env.PORT || 8000
 
@@ -26,7 +26,7 @@ MongoClient.connect(
   // Set the poolSize to 50 connections.
   // TODO: Timeouts
   // Set the write timeout limit to 2500 milliseconds.
-  { useNewUrlParser: true },
+  { poolSize: 50, wtimeout: 2500, useNewUrlParser: true },
 )
   .catch(err => {
     console.error(err.stack)
@@ -35,7 +35,7 @@ MongoClient.connect(
   .then(async client => {
     await QuestionsDAO.injectDB(client)
     await UsersDAO.injectDB(client)
-    await CommentsDAO.injectDB(client)
+    await AnswersDAO.injectDB(client)
     app.listen(port, () => {
       console.log(`listening on port ${port}`)
     })

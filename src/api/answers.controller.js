@@ -1,11 +1,11 @@
 import UsersDAO from "../dao/usersDAO"
-import CommentsDAO from "../dao/commentsDAO"
-import MoviesDAO from "../dao/questionsDAO"
+import AnswersDAO from "../dao/answersDAO"
+import QuestionsDAO from "../dao/questionsDAO"
 import { User } from "./users.controller"
 import { ObjectId } from "bson"
 
-export default class CommentsController {
-  static async apiPostComment(req, res, next) {
+export default class AnswersController {
+  static async apiPostAnswer(req, res, next) {
     try {
       const userJwt = req.get("Authorization").slice("Bearer ".length)
       const user = await User.decoded(userJwt)
@@ -15,26 +15,26 @@ export default class CommentsController {
         return
       }
 
-      const movieId = req.body.movie_id
-      const comment = req.body.comment
+      const questionId = req.body.question_id
+      const answer = req.body.answer
       const date = new Date()
 
-      const commentResponse = await CommentsDAO.addComment(
-        ObjectId(movieId),
+      const answerResponse = await AnswersDAO.addAnswer(
+        ObjectId(questionId),
         user,
-        comment,
+        answer,
         date,
       )
 
-      const updatedComments = await MoviesDAO.getMovieByID(movieId)
+      const updatedAnswers = await QuestionsDAO.getQuestionByID(questionId)
 
-      res.json({ status: "success", comments: updatedComments.comments })
+      res.json({ status: "success", answers: updatedAnswers.answers })
     } catch (e) {
       res.status(500).json({ e })
     }
   }
 
-  static async apiUpdateComment(req, res, next) {
+  static async apiUpdateAnswer(req, res, next) {
     try {
       const userJwt = req.get("Authorization").slice("Bearer ".length)
       const user = await User.decoded(userJwt)
@@ -44,38 +44,38 @@ export default class CommentsController {
         return
       }
 
-      const commentId = req.body.comment_id
-      const text = req.body.updated_comment
+      const answerId = req.body.answer_id
+      const text = req.body.updated_answer
       const date = new Date()
 
-      const commentResponse = await CommentsDAO.updateComment(
-        ObjectId(commentId),
+      const answerResponse = await AnswersDAO.updateAnswer(
+        ObjectId(answerId),
         user.email,
         text,
         date,
       )
 
-      var { error } = commentResponse
+      var { error } = answerResponse
       if (error) {
         res.status(400).json({ error })
       }
 
-      if (commentResponse.modifiedCount === 0) {
+      if (answerResponse.modifiedCount === 0) {
         throw new Error(
-          "unable to update comment - user may not be original poster",
+          "unable to update answer - user may not be original poster",
         )
       }
 
-      const movieId = req.body.movie_id
-      const updatedComments = await MoviesDAO.getMovieByID(movieId)
+      const questionId = req.body.question_id
+      const updatedAnswers = await QuestionsDAO.getQuestionByID(questionId)
 
-      res.json({ comments: updatedComments.comments })
+      res.json({ answers: updatedAnswers.answers })
     } catch (e) {
       res.status(500).json({ e })
     }
   }
 
-  static async apiDeleteComment(req, res, next) {
+  static async apiDeleteAnswer(req, res, next) {
     try {
       const userJwt = req.get("Authorization").slice("Bearer ".length)
       const user = await User.decoded(userJwt)
@@ -85,23 +85,23 @@ export default class CommentsController {
         return
       }
 
-      const commentId = req.body.comment_id
+      const answerId = req.body.answer_id
       const userEmail = user.email
-      const commentResponse = await CommentsDAO.deleteComment(
-        ObjectId(commentId),
+      const answerResponse = await AnswersDAO.deleteAnswer(
+        ObjectId(answerId),
         userEmail,
       )
 
-      const movieId = req.body.movie_id
+      const questionId = req.body.question_id
 
-      const { comments } = await MoviesDAO.getMovieByID(movieId)
-      res.json({ comments })
+      const { answers } = await QuestionsDAO.getQuestionByID(questionId)
+      res.json({ answers })
     } catch (e) {
       res.status(500).json({ e })
     }
   }
 
-  static async apiCommentReport(req, res, next) {
+  static async apiAnswerReport(req, res, next) {
     try {
       const userJwt = req.get("Authorization").slice("Bearer ".length)
       const user = await User.decoded(userJwt)
@@ -112,7 +112,7 @@ export default class CommentsController {
       }
 
       if (UsersDAO.checkAdmin(user.email)) {
-        const report = await CommentsDAO.mostActiveCommenters()
+        const report = await AnswersDAO.mostActiveAnswerers()
         res.json({ report })
         return
       }

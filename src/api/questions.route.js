@@ -1,6 +1,6 @@
 import { Router } from "express"
 import QuestionsCtrl from "./questions.controller"
-import CommentsCtrl from "./comments.controller"
+import AnswersCtrl from "./answers.controller"
 
 const router = new Router()
 
@@ -13,9 +13,9 @@ router.route("/id/:id").get(QuestionsCtrl.apiGetQuestionById)
 router.route("/config-options").get(QuestionsCtrl.getConfig)
 
 router
-  .route("/comment")
-  .post(CommentsCtrl.apiPostComment)
-  .put(CommentsCtrl.apiUpdateComment)
-  .delete(CommentsCtrl.apiDeleteComment)
+  .route("/answer")
+  .post(AnswersCtrl.apiPostAnswer)
+  .put(AnswersCtrl.apiUpdateAnswer)
+  .delete(AnswersCtrl.apiDeleteAnswer)
 
 export default router

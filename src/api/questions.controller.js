@@ -31,13 +31,13 @@ export default class QuestionsController {
   static async apiGetQuestionById(req, res, next) {
     try {
       let id = req.params.id || {}
-      let movie = await QuestionsDAO.getQuestionByID(id)
-      if (!movie) {
+      let question = await QuestionsDAO.getQuestionByID(id)
+      if (!question) {
         res.status(404).json({ error: "Not found" })
         return
       }
-      let updated_type = movie.lastupdated instanceof Date ? "Date" : "other"
-      res.json({ movie, updated_type })
+      let updated_type = question.lastupdated instanceof Date ? "Date" : "other"
+      res.json({ question, updated_type })
     } catch (e) {
       console.log(`api, ${e}`)
       res.status(500).json({ error: e })
