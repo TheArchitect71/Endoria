@@ -285,21 +285,47 @@ export default class QuestionsDAO {
   static async getQuestionByID(id) {
     try {
       /**
-      Ticket: Get Comments
+      Ticket: Get Answers
 
-      Given a question ID, build an Aggregation Pipeline to retrieve the comments
+      Given a question ID, build an Aggregation Pipeline to retrieve the questions
       matching that question's ID.
 
       The $match stage is already completed. You will need to add a $lookup
-      stage that searches the `comments` collection for the correct comments.
+      stage that searches the `questions` collection for the correct questions.
       */
 
-      // TODO Ticket: Get Comments
+      // TODO Ticket: Get Answers
       // Implement the required pipeline.
       const pipeline = [
         {
+          // find the current question in the "questions" collection
           $match: {
             _id: ObjectId(id),
+          },
+        },
+        {
+          // lookup answers from the "answers" collection
+          $lookup: {
+            from: "answers",
+            let: { id: "$_id" },
+            pipeline: [
+              {
+                // only join answers with a match question_id
+                $match: {
+                  $expr: {
+                    $eq: ["$question_id", "$$id"],
+                  },
+                },
+              },
+              {
+                // sort by date in descending order
+                $sort: {
+                  date: -1,
+                },
+              },
+            ],
+            // call embedded field answers
+            as: "answers",
           },
         },
       ]
@@ -357,7 +383,7 @@ export default class QuestionsDAO {
  * @property {string[]} countries
  * @property {string[]} rated
  * @property {string[]} genres
- * @property {string[]} comments
+ * @property {string[]} questions
  */
 
 /**
