@@ -313,7 +313,7 @@ export default class QuestionsDAO {
                 // only join answers with a match question_id
                 $match: {
                   $expr: {
-                    $eq: ["$question_id", "$$id"],
+                    $eq: ["$questionId", "$$id"],
                   },
                 },
               },
