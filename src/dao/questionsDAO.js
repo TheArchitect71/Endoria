@@ -38,16 +38,16 @@ export default class QuestionsDAO {
   }
 
   /**
-   * Finds and returns questions originating from one or more countries.
+   * Finds and returns questions originating from one or more journeys.
    * Returns a list of objects, each object contains a title and an _id.
-   * @param {string[]} countries - The list of countries.
-   * @returns {Promise<CountryResult>} A promise that will resolve to a list of CountryResults.
+   * @param {string[]} journeys - The list of journeys.
+   * @returns {Promise<JourneyResult>} A promise that will resolve to a list of JourneyResults.
    */
-  static async getQuestionsByCountry(countries) {
+  static async getQuestionsByJourney(journeys) {
     /**
     Ticket: Projection
 
-    Write a query that matches questions with the countries in the "countries"
+    Write a query that matches questions with the journeys in the "journeys"
     list, but only returns the title and _id of each question.
 
     Remember that in MongoDB, the $in operator can be used with a list to
@@ -57,7 +57,7 @@ export default class QuestionsDAO {
     let cursor
     try {
       // TODO Ticket: Projection
-      // Find questions matching the "countries" list, but only return the title
+      // Find questions matching the "journeys" list, but only return the title
       // and _id. Do not put a limit in your own implementation, the limit
       // here is only included to avoid sending 46000 documents down the
       // wire.
@@ -211,7 +211,7 @@ export default class QuestionsDAO {
   }
 
   /**
-   * Finds and returns questions by country.
+   * Finds and returns questions by journey.
    * Returns a list of objects, each object contains a title and an _id.
    * @param {Object} filters - The search parameters to use in the query.
    * @param {number} page - The page of questions to retrieve.
@@ -355,8 +355,8 @@ export default class QuestionsDAO {
  */
 
 /**
- * Represents a single country result
- * @typedef CountryResult
+ * Represents a single journey result
+ * @typedef JourneyResult
  * @property {string} ObjectID - The ObjectID of the question
  * @property {string} title - The title of the question
  */
@@ -380,7 +380,7 @@ export default class QuestionsDAO {
  * @property {string[]} directors
  * @property {string[]} writers
  * @property {IMDB} imdb
- * @property {string[]} countries
+ * @property {string[]} journeys
  * @property {string[]} rated
  * @property {string[]} genres
  * @property {string[]} questions

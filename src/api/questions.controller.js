@@ -17,11 +17,11 @@ export default class QuestionsController {
     res.json(response)
   }
 
-  static async apiGetQuestionsByCountry(req, res, next) {
-    let countries = Array.isArray(req.query.countries)
-      ? req.query.countries
-      : Array(req.query.countries)
-    let questionsList = await QuestionsDAO.getQuestionsByCountry(countries)
+  static async apiGetQuestionsByJourney(req, res, next) {
+    let journeys = Array.isArray(req.query.journeys)
+      ? req.query.journeys
+      : Array(req.query.journeys)
+    let questionsList = await QuestionsDAO.getQuestionsByJourney(journeys)
     let response = {
       titles: questionsList,
     }
