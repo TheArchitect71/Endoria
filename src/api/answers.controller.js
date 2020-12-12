@@ -87,6 +87,8 @@ export default class AnswersController {
 
       const answerId = req.body.answer_id
       const userEmail = user.email
+      console.log(user.email)
+      console.log(answerId)
       const answerResponse = await AnswersDAO.deleteAnswer(
         ObjectId(answerId),
         userEmail,
