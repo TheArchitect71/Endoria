@@ -46,8 +46,9 @@ export default class AnswersDAO {
       // TODO Ticket: Create/Update Answers
       // Construct the answer document to be inserted into MongoDB.
       const answerDoc = {
-        questionId: questionId,
-        user: user,
+        question_id: questionId,
+        name: user.name,
+        email: user.email,
         answer: answer,
         date: date,
       }
@@ -101,7 +102,7 @@ export default class AnswersDAO {
       // Use the userEmail and answerId to delete the proper answer.
       const deleteResponse = await answers.deleteOne({
         _id: ObjectId(answerId),
-        user: userEmail,
+        email: userEmail,
       })
 
       return deleteResponse
