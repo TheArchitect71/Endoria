@@ -285,7 +285,7 @@ export default class QuestionsDAO {
    * @param {string} id - The desired question id, the _id in Mongo
    * @returns {MflixQuestion | null} Returns either a single question or nothing
    */
-  static async getQuestionByID(id) {
+  static async getQuestionByID(id, userId) {
     try {
       /**
       Ticket: Get Answers
@@ -316,7 +316,10 @@ export default class QuestionsDAO {
                 // only join answers with a match question_id
                 $match: {
                   $expr: {
-                    $eq: ["$question_id", "$$id"],
+                    $and: [
+                      { $eq: ["$question_id", "$$id"] },
+                      { $eq: ["$email", userId] },
+                    ],
                   },
                 },
               },

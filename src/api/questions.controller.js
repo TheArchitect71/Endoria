@@ -1,4 +1,5 @@
 import QuestionsDAO from "../dao/questionsDAO"
+import { User } from "./users.controller"
 
 export default class QuestionsController {
   static async apiGetQuestions(req, res, next) {
@@ -30,8 +31,17 @@ export default class QuestionsController {
 
   static async apiGetQuestionById(req, res, next) {
     try {
+      const userJwt = req.get("Authorization").slice("Bearer ".length)
+      const user = await User.decoded(userJwt)
+      var { error } = user
+      if (error) {
+        res.status(401).json({ error })
+        return
+      }
+
       let id = req.params.id || {}
-      let question = await QuestionsDAO.getQuestionByID(id)
+      let userId = user.email
+      let question = await QuestionsDAO.getQuestionByID(id, userId)
       if (!question) {
         res.status(404).json({ error: "Not found" })
         return

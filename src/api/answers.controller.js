@@ -26,7 +26,10 @@ export default class AnswersController {
         date,
       )
 
-      const updatedAnswers = await QuestionsDAO.getQuestionByID(questionId)
+      const updatedAnswers = await QuestionsDAO.getQuestionByID(
+        questionId,
+        user.email,
+      )
 
       res.json({ status: "success", answers: updatedAnswers.answers })
     } catch (e) {
@@ -67,7 +70,10 @@ export default class AnswersController {
       }
 
       const questionId = req.body.question_id
-      const updatedAnswers = await QuestionsDAO.getQuestionByID(questionId)
+      const updatedAnswers = await QuestionsDAO.getQuestionByID(
+        questionId,
+        user.email,
+      )
 
       res.json({ answers: updatedAnswers.answers })
     } catch (e) {
@@ -87,8 +93,6 @@ export default class AnswersController {
 
       const answerId = req.body.answer_id
       const userEmail = user.email
-      console.log(user.email)
-      console.log(answerId)
       const answerResponse = await AnswersDAO.deleteAnswer(
         ObjectId(answerId),
         userEmail,
