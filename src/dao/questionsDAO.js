@@ -41,36 +41,59 @@ export default class QuestionsDAO {
    * Finds and returns questions originating from one or more journeys.
    * Returns a list of objects, each object contains a title and an _id.
    * @param {string[]} journeys - The list of journeys.
+   *- The number of questions per page
    * @returns {Promise<JourneyResult>} A promise that will resolve to a list of JourneyResults.
    */
-  static async getQuestionsByJourney(journeys) {
+  static async getQuestionsByJourney(
+    // here's where the default parameters are set for the getQuestionsByJourney method
+    journeys,
+    lastId,
+    pageSize,
+  ) {
     /**
     Ticket: Projection
 
     Write a query that matches questions with the journeys in the "journeys"
-    list, but only returns the title and _id of each question.
-
+    list, but only returns the title, num_answers and _id of each question.
+    
     Remember that in MongoDB, the $in operator can be used with a list to
     match one or more values of a specific field.
     */
-
     let cursor
+    console.log(`last id  ${lastId}`)
+    console.log(`per page ${pageSize}`)
     try {
-      // TODO Ticket: Projection
-      // Find questions matching the "journeys" list, but only return the title
-      // and _id. Do not put a limit in your own implementation, the limit
-      // here is only included to avoid sending 46000 documents down the
-      // wire.
-      cursor = await questions.find(
-        { journeys: { $in: journeys } },
-        { projection: { _id: 1, title: 1 } },
-      )
+      // TODO Ticket: Paging
+      // Use the cursor to only return the questions that belong on the current page
+
+      if (lastId.length < 10) {
+        //When it is the first page
+        cursor = await questions
+          .find({ journeys: { $in: journeys } })
+          .limit(pageSize)
+      } else {
+        console.log(typeof lastId, lastId.length, lastId)
+        cursor = await questions
+          .find({
+            journeys: { $in: journeys },
+            _id: { $gt: ObjectId(lastId) },
+          })
+          .limit(pageSize)
+      }
+      // Since documents are naturally ordered with _id, last document will have max id.
+
+      const questionsList = await cursor.toArray()
+
+      // let first_id = questionsList[0]._id
+      let last_id = questionsList[pageSize - 1]._id
+
+      console.log(typeof last_id._id, last_id, last_id.length)
+
+      return { questionsList, last_id }
     } catch (e) {
       console.error(`Unable to issue find command, ${e}`)
-      return []
+      return { questionsList: [], totalNumQuestions: 0 }
     }
-
-    return cursor.toArray()
   }
 
   /**
@@ -265,7 +288,6 @@ export default class QuestionsDAO {
     const displayCursor = cursor
       .skip(questionsPerPage * page)
       .limit(questionsPerPage)
-
     try {
       const questionsList = await displayCursor.toArray()
       const totalNumQuestions =

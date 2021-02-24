@@ -19,12 +19,25 @@ export default class QuestionsController {
   }
 
   static async apiGetQuestionsByJourney(req, res, next) {
+    let pageSize = parseInt(req.query.pageSize, 10)
+    let lastId = req.query.lastId
+    console.log(`The type of lastId is`, typeof lastId)
+
     let journeys = Array.isArray(req.query.journeys)
       ? req.query.journeys
       : Array(req.query.journeys)
-    let questionsList = await QuestionsDAO.getQuestionsByJourney(journeys)
+
+    const { questionsList, last_id } = await QuestionsDAO.getQuestionsByJourney(
+      journeys,
+      lastId,
+      pageSize,
+    )
+
     let response = {
       titles: questionsList,
+      // first_id: first_id,
+      last_id: last_id,
+      entries_per_page: pageSize,
     }
     res.json(response)
   }
