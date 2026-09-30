@@ -1,7 +1,7 @@
 import bcrypt from "bcryptjs"
 import jwt from "jsonwebtoken"
 import { ObjectId } from "mongodb"
-import UsersDAO from "../dao/usersDAO"
+import UsersDAO from "../dao/usersDAO.js"
 
 const hashPassword = async password => await bcrypt.hash(password, 10)
 
@@ -42,10 +42,10 @@ export default class UserController {
     try {
       const userFromBody = req.body
       let errors = {}
-      if (userFromBody && userFromBody.password.length < 8) {
+      if (userFromBody && (userFromBody.password || "").length < 8) {
         errors.password = "Your password must be at least 8 characters."
       }
-      if (userFromBody && userFromBody.name.length < 3) {
+      if (userFromBody && (userFromBody.name || "").length < 3) {
         errors.name = "You must specify a name of at least 3 characters."
       }
 
@@ -121,7 +121,7 @@ export default class UserController {
 
   static async logout(req, res) {
     try {
-      const userJwt = req.get("Authorization").slice("Bearer ".length)
+      const userJwt = (req.get("Authorization") || "").replace(/^Bearer /, "")
       const userObj = await User.decoded(userJwt)
       var { error } = userObj
       if (error) {
@@ -147,7 +147,7 @@ export default class UserController {
         res.status(400).json({ error: "Bad password format, expected string." })
         return
       }
-      const userJwt = req.get("Authorization").slice("Bearer ".length)
+      const userJwt = (req.get("Authorization") || "").replace(/^Bearer /, "")
       const userClaim = await User.decoded(userJwt)
       var { error } = userClaim
       if (error) {
@@ -173,7 +173,7 @@ export default class UserController {
 
   static async save(req, res) {
     try {
-      const userJwt = req.get("Authorization").slice("Bearer ".length)
+      const userJwt = (req.get("Authorization") || "").replace(/^Bearer /, "")
       const userFromHeader = await User.decoded(userJwt)
       var { error } = userFromHeader
       if (error) {
@@ -202,10 +202,10 @@ export default class UserController {
     try {
       const userFromBody = req.body
       let errors = {}
-      if (userFromBody && userFromBody.password.length < 8) {
+      if (userFromBody && (userFromBody.password || "").length < 8) {
         errors.password = "Your password must be at least 8 characters."
       }
-      if (userFromBody && userFromBody.name.length < 3) {
+      if (userFromBody && (userFromBody.name || "").length < 3) {
         errors.name = "You must specify a name of at least 3 characters."
       }
 

@@ -1,13 +1,13 @@
-import UsersDAO from "../dao/usersDAO"
-import AnswersDAO from "../dao/answersDAO"
-import QuestionsDAO from "../dao/questionsDAO"
-import { User } from "./users.controller"
-import { ObjectId } from "bson"
+import UsersDAO from "../dao/usersDAO.js"
+import AnswersDAO from "../dao/answersDAO.js"
+import QuestionsDAO from "../dao/questionsDAO.js"
+import { User } from "./users.controller.js"
+import { ObjectId } from "mongodb"
 
 export default class AnswersController {
   static async apiPostAnswer(req, res, next) {
     try {
-      const userJwt = req.get("Authorization").slice("Bearer ".length)
+      const userJwt = (req.get("Authorization") || "").replace(/^Bearer /, "")
       const user = await User.decoded(userJwt)
       var { error } = user
       if (error) {
@@ -20,7 +20,7 @@ export default class AnswersController {
       const date = new Date()
 
       const answerResponse = await AnswersDAO.addAnswer(
-        ObjectId(questionId),
+        new ObjectId(questionId),
         user,
         answer,
         date,
@@ -39,7 +39,7 @@ export default class AnswersController {
 
   static async apiUpdateAnswer(req, res, next) {
     try {
-      const userJwt = req.get("Authorization").slice("Bearer ".length)
+      const userJwt = (req.get("Authorization") || "").replace(/^Bearer /, "")
       const user = await User.decoded(userJwt)
       var { error } = user
       if (error) {
@@ -52,7 +52,7 @@ export default class AnswersController {
       const date = new Date()
 
       const answerResponse = await AnswersDAO.updateAnswer(
-        ObjectId(answerId),
+        new ObjectId(answerId),
         user.email,
         text,
         date,
@@ -60,7 +60,7 @@ export default class AnswersController {
 
       var { error } = answerResponse
       if (error) {
-        res.status(400).json({ error })
+        return res.status(400).json({ error })
       }
 
       if (answerResponse.modifiedCount === 0) {
@@ -83,7 +83,7 @@ export default class AnswersController {
 
   static async apiDeleteAnswer(req, res, next) {
     try {
-      const userJwt = req.get("Authorization").slice("Bearer ".length)
+      const userJwt = (req.get("Authorization") || "").replace(/^Bearer /, "")
       const user = await User.decoded(userJwt)
       var { error } = user
       if (error) {
@@ -94,13 +94,13 @@ export default class AnswersController {
       const answerId = req.body.answer_id
       const userEmail = user.email
       const answerResponse = await AnswersDAO.deleteAnswer(
-        ObjectId(answerId),
+        new ObjectId(answerId),
         userEmail,
       )
 
       const questionId = req.body.question_id
 
-      const { answers } = await QuestionsDAO.getQuestionByID(questionId)
+      const { answers } = await QuestionsDAO.getQuestionByID(questionId, userEmail)
       res.json({ answers })
     } catch (e) {
       res.status(500).json({ e })
@@ -109,7 +109,7 @@ export default class AnswersController {
 
   static async apiAnswerReport(req, res, next) {
     try {
-      const userJwt = req.get("Authorization").slice("Bearer ".length)
+      const userJwt = (req.get("Authorization") || "").replace(/^Bearer /, "")
       const user = await User.decoded(userJwt)
       var { error } = user
       if (error) {
@@ -117,7 +117,7 @@ export default class AnswersController {
         return
       }
 
-      if (UsersDAO.checkAdmin(user.email)) {
+      if ((await UsersDAO.checkAdmin(user.email)) === true) {
         const report = await AnswersDAO.mostActiveAnswerers()
         res.json({ report })
         return

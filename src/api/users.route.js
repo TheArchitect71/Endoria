@@ -1,6 +1,6 @@
 import { Router } from "express"
-import usersCtrl from "./users.controller"
-import answersCtrl from "./answers.controller"
+import usersCtrl from "./users.controller.js"
+import answersCtrl from "./answers.controller.js"
 
 const router = new Router()
 

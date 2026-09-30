@@ -1,14 +1,12 @@
-import { ObjectId } from "bson"
+import { namespace } from '../offline-config.js';
+import { ObjectId } from "mongodb"
 
 let answers
 
 export default class AnswersDAO {
   static async injectDB(conn) {
-    if (answers) {
-      return
-    }
     try {
-      answers = await conn.db(process.env.MFLIX_NS).collection("answers")
+      answers = await conn.db(namespace()).collection("answers")
     } catch (e) {
       console.error(`Unable to establish collection handles in userDAO: ${e}`)
     }
@@ -76,7 +74,7 @@ export default class AnswersDAO {
       // Use the answerId and userEmail to select the proper answer, then
       // update the "text" and "date" fields of the selected answer.
       const updateResponse = await answers.updateOne(
-        { _id: answerId, user: userEmail },
+        { _id: new ObjectId(answerId), email: userEmail },
         { $set: { answer: text, date: date } },
       )
 
@@ -101,7 +99,7 @@ export default class AnswersDAO {
       // TODO Ticket: Delete Answers
       // Use the userEmail and answerId to delete the proper answer.
       const deleteResponse = await answers.deleteOne({
-        _id: ObjectId(answerId),
+        _id: new ObjectId(answerId),
         email: userEmail,
       })
 

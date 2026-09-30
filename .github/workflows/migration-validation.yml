@@ -1,0 +1,28 @@
+name: Migration validation
+on:
+  push:
+    branches: [master, main]
+  pull_request:
+permissions:
+  contents: read
+jobs:
+  validate:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-node@v6
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+      - run: npm ci
+      - name: Start isolated MongoDB 9.0.2
+        run: |
+          curl -fsSL https://fastdl.mongodb.org/linux/mongodb-linux-x86_64-ubuntu2404-9.0.2.tgz -o "$RUNNER_TEMP/mongodb.tgz"
+          echo "048a997b1003260bd819f3793609f26db1f46d148334134139e2b4a9fac38dd5  $RUNNER_TEMP/mongodb.tgz" | sha256sum --check
+          mkdir -p "$RUNNER_TEMP/mongodb" "$RUNNER_TEMP/mongodb-data"
+          tar -xzf "$RUNNER_TEMP/mongodb.tgz" -C "$RUNNER_TEMP/mongodb" --strip-components=1
+          "$RUNNER_TEMP/mongodb/bin/mongod" --dbpath "$RUNNER_TEMP/mongodb-data" --bind_ip 127.0.0.1 --port 27018 --replSet offline-rs --fork --logpath "$RUNNER_TEMP/mongodb.log"
+          npm run db:init
+      - run: npm run check
+      - run: npm test
+      - run: npm audit
