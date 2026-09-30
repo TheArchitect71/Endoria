@@ -1,38 +1,41 @@
-# Endoria
+# Endoria — reflection API
 
-Express 5.2.1 backend with MongoDB driver 7.7.0. The migration preserved the existing local question database. A fresh clone starts with no application data; no private database is bundled. No Atlas account or network is required.
+The backend for [Andoria](https://github.com/TheArchitect71/Andoria), a guided journaling and self-reflection app. Express and the MongoDB driver provide account authentication, preferences, journey questions, cursor pagination, and ownership checks for saved answers. This repository has no frontend; run Andoria separately.
 
-## Run
+## Run locally
 
-Use Node 26.10.0 (`.nvmrc`) and MongoDB Community 9.0.2. From this repository:
+Prerequisites: the Node version in `.nvmrc` (currently 26.10.0), npm, and MongoDB Community 9.0.2. From the repository root:
 
 ```sh
 npm ci
 npm run setup:local
+```
+
+Start MongoDB in a foreground terminal:
+
+```sh
 mkdir -p .local/mongodb
 mongod --dbpath .local/mongodb --bind_ip 127.0.0.1 --port 27018 --replSet offline-rs
 ```
 
-Leave MongoDB in that foreground terminal. In a second terminal run `npm run db:init` and `npm start`. Skip the MongoDB launch if the matching `offline-rs` already runs on 27018. Setup generates a private secret without overwriting existing `.env.local`; database initialization creates no application records.
+If that local replica set already runs on port 27018, reuse it rather than starting a second instance. In another terminal at the repository root:
 
-API: http://127.0.0.1:8000/api/v1/questions. Stop foreground processes with Ctrl+C. `.env.local` selects the local `endoria` database and contains a private JWT secret. The previous `.env` is preserved and is not loaded by startup. Local URI validation rejects remote endpoints before connecting. Existing passwords/data are unchanged; the new signing secret requires logging in again.
+```sh
+npm run db:init
+npm start
+```
 
-The Angular frontend is the sibling `../Andoria`. Clone [Andoria](https://github.com/TheArchitect71/Andoria) beside this repository. This repository had no bundled `build` frontend.
+Open [http://127.0.0.1:8000](http://127.0.0.1:8000). Keep both processes in the foreground and stop them with **Ctrl+C**. Setup creates a private, ignored `.env.local` without overwriting an existing file. Database initialization creates no application records. These defaults use local MongoDB; no Atlas account is required.
 
-## Checks
+## Data and frontend
+
+The questions API is `/api/v1/questions`. A fresh database has no question dataset. To import your own question export, run `npm run import:questions -- /path/to/questions.json`. It expects a JSON array with `_id.$oid`, `title`, and `journeys` for each question, and replaces or inserts matching question IDs. The default input path is `.local-data/questions.json`. Private user data and databases are not bundled. Clone Andoria beside this repository and follow its README.
+
+## Development
 
 ```sh
 npm run check
 npm test
-npm run check:pagination
 ```
 
-`npm test` uses a uniquely named isolated local database, then drops that test database. It tests authentication, preferences, question cursors and answer ownership. `check:pagination` is read-only against the running application: it verifies the configured database IDs, journeys, cursor boundaries/retries, and page sizes without changing user records.
-
-The old `test/` files are retained as learning references. They import missing MoviesDAO/CommentsDAO files and require a separate MFlix dataset; they are not a valid regression suite for the question application. The new runnable suite is in `tests/`.
-
-## Migration notes
-
-Native Node ES modules replace obsolete Babel startup. Current MongoDB options use `maxPoolSize`, `writeConcern`, and `serverSelectionTimeoutMS`; IDs use `new ObjectId`. Express native parsers and current catchall handling preserve the existing routes. User cursor-pagination and journey cache API contracts remain intact. Source snapshots include the user's untracked scripts/docs before this migration.
-
-Official references: [MongoDB driver upgrades](https://www.mongodb.com/docs/drivers/node/current/reference/upgrade/), [Express 5 migration](https://expressjs.com/en/guide/migrating-5/).
+Tests use an isolated local MongoDB database and remove it afterwards. With the app running, `npm run check:pagination` performs read-only pagination checks. Old course exercises in `test/` are references; the runnable application suite is in `tests/`.
