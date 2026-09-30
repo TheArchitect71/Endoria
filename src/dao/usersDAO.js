@@ -1,14 +1,12 @@
+import { namespace } from '../offline-config.js';
 let users
 let sessions
 
 export default class UsersDAO {
   static async injectDB(conn) {
-    if (users && sessions) {
-      return
-    }
     try {
-      users = await conn.db(process.env.MFLIX_NS).collection("users")
-      sessions = await conn.db(process.env.MFLIX_NS).collection("sessions")
+      users = await conn.db(namespace()).collection("users")
+      sessions = await conn.db(namespace()).collection("sessions")
     } catch (e) {
       console.error(`Unable to establish collection handles in userDAO: ${e}`)
     }
@@ -67,7 +65,7 @@ export default class UsersDAO {
       })
       return { success: true }
     } catch (e) {
-      if (String(e).startsWith("MongoError: E11000 duplicate key error")) {
+      if (e.code === 11000) {
         return { error: "A user with the given email already exists." }
       }
       console.error(`Error occurred while adding new user, ${e}.`)
@@ -86,7 +84,7 @@ export default class UsersDAO {
       // TODO Ticket: User Management
       // Use an UPSERT statement to update the "jwt" field in the document,
       // matching the "user_id" field with the email passed to this function.
-      await sessions.updateOne({ email: email }, { $set: { jwt: jwt } })
+      await sessions.updateOne({ email: email }, { $set: { jwt: jwt } }, { upsert: true })
       return { success: true }
     } catch (e) {
       console.error(`Error occurred while logging in user, ${e}`)
@@ -136,7 +134,7 @@ export default class UsersDAO {
   static async deleteUser(email) {
     try {
       await users.deleteOne({ email })
-      await sessions.deleteOne({ user_id: email })
+      await sessions.deleteMany({ $or: [{ email }, { user_id: email }] })
       if (!(await this.getUser(email)) && !(await this.getUserSession(email))) {
         return { success: true }
       } else {

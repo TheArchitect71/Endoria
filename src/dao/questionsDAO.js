@@ -1,17 +1,17 @@
-import { ObjectId } from "bson"
+import { namespace } from '../offline-config.js';
+import { ObjectId } from "mongodb"
 
 let questions
 let mflix
+let mongoClient
 const DEFAULT_SORT = [["tomatoes.viewer.numReviews", -1]]
 
 export default class QuestionsDAO {
   static async injectDB(conn) {
-    if (questions) {
-      return
-    }
     try {
-      mflix = await conn.db(process.env.MFLIX_NS)
-      questions = await conn.db(process.env.MFLIX_NS).collection("questions")
+      mongoClient = conn
+      mflix = await conn.db(namespace())
+      questions = await conn.db(namespace()).collection("questions")
       this.questions = questions // this is only for testing
     } catch (e) {
       console.error(
@@ -28,7 +28,8 @@ export default class QuestionsDAO {
   static async getConfiguration() {
     const roleInfo = await mflix.command({ connectionStatus: 1 })
     const authInfo = roleInfo.authInfo.authenticatedUserRoles[0]
-    const { poolSize, wtimeout } = questions.s.db.serverConfig.s.options
+    const { maxPoolSize: poolSize, writeConcern } = mongoClient.options
+    const wtimeout = writeConcern?.wtimeoutMS ?? 2500
     let response = {
       poolSize,
       wtimeout,
@@ -38,62 +39,46 @@ export default class QuestionsDAO {
   }
 
   /**
-   * Finds and returns questions originating from one or more journeys.
-   * Returns a list of objects, each object contains a title and an _id.
-   * @param {string[]} journeys - The list of journeys.
-   *- The number of questions per page
-   * @returns {Promise<JourneyResult>} A promise that will resolve to a list of JourneyResults.
+   * Page in ascending _id order. The cursor uses the same field as the sort,
+   * so the next page starts strictly after the last returned document.
    */
-  static async getQuestionsByJourney(
-    // here's where the default parameters are set for the getQuestionsByJourney method
-    journeys,
-    lastId,
-    pageSize,
-  ) {
-    /**
-    Ticket: Projection
-
-    Write a query that matches questions with the journeys in the "journeys"
-    list, but only returns the title, num_answers and _id of each question.
-    
-    Remember that in MongoDB, the $in operator can be used with a list to
-    match one or more values of a specific field.
-    */
-    let cursor
-    console.log(`last id  ${lastId}`)
-    console.log(`per page ${pageSize}`)
-    try {
-      // TODO Ticket: Paging
-      // Use the cursor to only return the questions that belong on the current page
-
-      if (lastId.length < 10) {
-        //When it is the first page
-        cursor = await questions
-          .find({ journeys: { $in: journeys } })
-          .limit(pageSize)
-      } else {
-        console.log(typeof lastId, lastId.length, lastId)
-        cursor = await questions
-          .find({
-            journeys: { $in: journeys },
-            _id: { $gt: ObjectId(lastId) },
-          })
-          .limit(pageSize)
-      }
-      // Since documents are naturally ordered with _id, last document will have max id.
-
-      const questionsList = await cursor.toArray()
-
-      // let first_id = questionsList[0]._id
-      let last_id = questionsList[pageSize - 1]._id
-
-      console.log(typeof last_id._id, last_id, last_id.length)
-
-      return { questionsList, last_id }
-    } catch (e) {
-      console.error(`Unable to issue find command, ${e}`)
-      return { questionsList: [], totalNumQuestions: 0 }
+  static async getQuestionPage({
+    journeys = null,
+    lastId = "",
+    pageSize = 20,
+  } = {}) {
+    if (!Number.isInteger(pageSize) || pageSize < 1 || pageSize > 100) {
+      throw new TypeError("pageSize must be an integer between 1 and 100")
     }
+    if (
+      typeof lastId !== "string" ||
+      (lastId && !/^[a-fA-F0-9]{24}$/.test(lastId))
+    ) {
+      throw new TypeError("lastId must be a 24-character hexadecimal ObjectId")
+    }
+    const filter = journeys === null ? {} : { journeys: { $in: journeys } }
+    const query = lastId
+      ? { ...filter, _id: { $gt: new ObjectId(lastId) } }
+      : filter
+    // One extra document tells us whether another page really exists.
+    const [documents, totalNumQuestions] = await Promise.all([
+      questions
+        .find(query)
+        .sort({ _id: 1 })
+        .limit(pageSize + 1)
+        .toArray(),
+      questions.countDocuments(filter),
+    ])
+    const has_more = documents.length > pageSize
+    const questionsList = documents.slice(0, pageSize)
+    const last_id = questionsList.length
+      ? questionsList[questionsList.length - 1]._id
+      : null
+    return { questionsList, totalNumQuestions, last_id, has_more }
+  }
+
+  static async getQuestionsByJourney(journeys, lastId = "", pageSize = 20) {
+    return this.getQuestionPage({ journeys, lastId, pageSize })
   }
 
   /**
@@ -308,6 +293,7 @@ export default class QuestionsDAO {
    * @returns {MflixQuestion | null} Returns either a single question or nothing
    */
   static async getQuestionByID(id, userId) {
+    if (!ObjectId.isValid(id)) return null
     try {
       /**
       Ticket: Get Answers
@@ -325,7 +311,7 @@ export default class QuestionsDAO {
         {
           // find the current question in the "questions" collection
           $match: {
-            _id: ObjectId(id),
+            _id: new ObjectId(id),
           },
         },
         {

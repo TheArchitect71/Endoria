@@ -1,2 +1,8 @@
 node_modules
 .env
+.local-data/
+.local-tools/
+
+.env.local
+
+.local/
